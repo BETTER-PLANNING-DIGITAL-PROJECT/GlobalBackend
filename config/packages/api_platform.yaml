@@ -1,0 +1,10 @@
+api_platform:
+  swagger:
+    api_keys:
+      JWT:
+        name: Authorization
+        type: header
+
+  defaults:
+    pagination_enabled: false
+    pagination_items_per_page: 100

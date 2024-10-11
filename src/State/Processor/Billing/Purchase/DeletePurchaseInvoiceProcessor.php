@@ -1,0 +1,68 @@
+<?php
+namespace App\State\Processor\Billing\Purchase;
+
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\ProcessorInterface;
+use App\Entity\Billing\Purchase\PurchaseInvoice;
+use App\Repository\Billing\Purchase\PurchaseInvoiceItemDiscountRepository;
+use App\Repository\Billing\Purchase\PurchaseInvoiceItemRepository;
+use App\Repository\Billing\Purchase\PurchaseInvoiceItemTaxRepository;
+use App\Repository\Billing\Purchase\PurchaseInvoiceRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+final class DeletePurchaseInvoiceProcessor implements ProcessorInterface
+{
+
+    public function __construct(private readonly ProcessorInterface $processor,
+                                private readonly EntityManagerInterface $manager,
+                                private readonly PurchaseInvoiceItemRepository $purchaseInvoiceItemRepository,
+                                private readonly PurchaseInvoiceItemDiscountRepository $purchaseInvoiceItemDiscountRepository,
+                                private readonly PurchaseInvoiceItemTaxRepository $purchaseInvoiceItemTaxRepository,
+                                Private readonly PurchaseInvoiceRepository $purchaseInvoiceRepository) {
+    }
+
+    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = [])
+    {
+        if(!$data instanceof PurchaseInvoice)
+        {
+            return new JsonResponse(['hydra:description' => 'This data must be type of purchase invoice.'], 404);
+        }
+
+        $purchaseInvoice = $this->purchaseInvoiceRepository->find($data->getId());
+        if(!$purchaseInvoice)
+        {
+            return new JsonResponse(['hydra:description' => 'Purchase Invoice not found.'], 404);
+        }
+
+        $purchaseInvoiceItems = $this->purchaseInvoiceItemRepository->findBy(['purchaseInvoice'=> $purchaseInvoice]);
+        if($purchaseInvoiceItems)
+        {
+            foreach ($purchaseInvoiceItems as $purchaseInvoiceItem)
+            {
+                // clear purchase invoice item discount
+                $purchaseInvoiceItemDiscounts = $this->purchaseInvoiceItemDiscountRepository->findBy(['purchaseInvoiceItem' => $purchaseInvoiceItem]);
+                if ($purchaseInvoiceItemDiscounts){
+                    foreach ($purchaseInvoiceItemDiscounts as $purchaseInvoiceItemDiscount){
+                        $this->manager->remove($purchaseInvoiceItemDiscount);
+                    }
+                }
+
+                // clear purchase invoice item tax
+                $purchaseInvoiceItemTaxes = $this->purchaseInvoiceItemTaxRepository->findBy(['purchaseInvoiceItem' => $purchaseInvoiceItem]);
+                if ($purchaseInvoiceItemTaxes){
+                    foreach ($purchaseInvoiceItemTaxes as $purchaseInvoiceItemTax){
+                        $this->manager->remove($purchaseInvoiceItemTax);
+                    }
+                }
+
+                $this->manager->remove($purchaseInvoiceItem);
+            }
+        }
+
+        $this->manager->remove($purchaseInvoice);
+        $this->manager->flush();
+
+        //return $this->processor->process($purchaseInvoice, $operation, $uriVariables, $context);
+    }
+}

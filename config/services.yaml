@@ -1,0 +1,532 @@
+        # This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    public_directory: '%kernel.project_dir%/public'
+    uploads_directory: '%public_directory%/uploads'
+    uploads_institution_directory: '%public_directory%/uploads/institution'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:               # makes $publicPath available to all services
+            $publicPath: '%public_directory%'
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    App\State\NewStudentRegistrationProvider: ~
+    App\State\OldStudentRegistrationProvider: ~
+    App\State\Registration2Provider: ~
+    App\State\ResignProvider: ~
+    App\State\DismissalProvider: ~
+    App\State\Registration3Provider: ~
+    App\State\ClassRegistrationProvider: ~
+    App\State\StudCourseRegProvider: ~
+    App\State\StudCourseRegStudentProvider: ~
+    App\State\Provider\Security\UserYearLessThanCurrentYearProvider: ~
+
+    App\State\Provider\Treasury\ValidatedBudgetTransactionProvider: ~
+    App\State\Provider\Budget\CurrentlyOpenedBudgetExerciseProvider: ~
+
+
+    App\Controller\:
+        resource: '../src/Controller/'
+        tags: [ 'controller.service_arguments' ]
+        exclude: '../src/Controller/School/Exam/EndProcessing/'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    App\Swagger\SwaggerDecorator:
+        decorates: 'api_platform.hydra.normalizer.documentation'
+        arguments: [ '@App\Swagger\SwaggerDecorator.inner' ]
+        autoconfigure: false
+        decoration_priority: 1000
+
+    App\Service\FileUploader:
+        arguments:
+           $uploadPath: '%uploads_directory%'
+
+    App\Service\UserFileUploader:
+        arguments:
+           $uploadPath: '%uploads_directory%'
+
+    App\Service\InstitutionFileUploader:
+        arguments:
+            $uploadPath: '%uploads_institution_directory%'
+
+    App\State\Processor\Budget\OpenBudgetExerciseProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Budget\CloseBudgetExerciseProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Budget\PostBudgetWithRateProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Security\DeleteInstitutionProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Security\DeleteUserProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Security\UpdateUserPasswordProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Global\SystemProcessor:
+        bind:
+            $persistProcessor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Global\SettingProcessor:
+        bind:
+            $persistProcessor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Security\SetCurrentYearProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\PostNewStudentRegistrationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\PutNewStudentRegistrationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\PostOldStudentRegistrationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\PutOldStudentRegistrationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\CancelSaleInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\CancelSaleReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\CreateSaleInvoiceItemProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\CreateSaleInvoiceTuitionProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\CreateSaleReturnInvoiceItemProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\GenerateSaleReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\GenerateSaleInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\DeleteSaleInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\DeleteSaleReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\PutSaleInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\PutSaleReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\PostOldStudentRegistrationPerClassProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Program\PostClassProgramProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Program\PutClassProgramProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+
+    App\State\Processor\School\Study\Timetable\GenerateTimeTableModelProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Timetable\DeleteTimeTableModelProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Timetable\ValidateTimeTableModelProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Timetable\UnValidateTimeTableModelProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Timetable\PublishTimeTableModelProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Timetable\UnPublishTimeTableModelProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Timetable\DuplicateTimeTableModelProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Timetable\SwapTimeTableModelDayCellProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Treasury\CloseCashDeskProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+
+    App\State\Processor\Security\PostSingleProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Security\PostLabelProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Security\PostMenuProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Security\PostSubMenuProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+
+
+
+    App\State\Processor\School\Study\Score\StartTeacherCourseProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Score\EndTeacherCourseProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Score\ValidateTeacherCourseScoreProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Score\UnValidateTeacherCourseScoreProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Teacher\CoursePostponement\PostCoursePostponementProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Teacher\CoursePostponement\ValidateCoursePostponementProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Teacher\CoursePostponement\UnValidateCoursePostponementProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Teacher\CoursePermutation\ValidateCoursePermutationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Teacher\CoursePermutation\UnValidateCoursePermutationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Hr\ValidateLeaveRequestProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Hr\UnValidateLeaveRequestProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Program\DuplicateTeacherCourseRegistrationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\ReadmissionStudentRegistrationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\DismissalStudentRegistrationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\ResignationStudentRegistrationProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Exam\Configuration\PostSchoolMarkGradeProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Exam\Configuration\PutSchoolMarkGradeProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Current\InstitutionProcessor:
+        bind:
+            $persistProcessor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Teacher\HomeWork\PublishHomeWorkProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Study\Teacher\HomeWork\StudentReceivedHomeWorkProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\StudentRegistrationDeleteProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\SchoolYearProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\TimeTableModelDayCellPostState:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\StudentDeleteProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+
+    App\State\ClassProgram\ClassProgramDeleteProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+            
+    App\State\MatriculeEditState:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+            
+    App\State\ArchiveState:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor' 
+            
+    App\State\DisableState:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor' 
+            
+    App\State\EnableState:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor' 
+            
+    App\State\RemoveSelectedState:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor' 
+            
+    App\State\RestoreState:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+        
+    App\State\RoleGettingProvider: ~
+#    App\State\TreeViewWhenCreateProfileProvider:
+#        bind:
+#            $itemProvider: '@api_platform.doctrine.orm.state.item_provider'
+
+    App\State\StudOldRegistration\StudOldRegistrationPerClassAddProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Current\UserBranchYearProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\School\Schooling\Registration\PutStudentProfileProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Partner\CustomerContactProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+
+
+
+    # inventory start
+
+    App\State\Processor\Inventory\Reception\CancelReceptionProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Reception\CreateReceptionItemProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Reception\DeleteReceptionProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Reception\GenerateReceptionProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Reception\PutReceptionProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Delivery\CancelDeliveryProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Delivery\CreateDeliveryItemProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Delivery\DeleteDeliveryProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Delivery\GenerateDeliveryProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Delivery\PutDeliveryProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Inventory\Delivery\PutDeliveryItemProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    # inventory end
+
+    # purchase start
+    App\State\Processor\Billing\Purchase\CancelPurchaseInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\CreatePurchaseInvoiceItemProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\GeneratePurchaseInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\PostPurchaseSettlementProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\PutPurchaseInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\PutPurchaseSettlementProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\DeletePurchaseInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\GeneratePurchaseReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\PutPurchaseReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\CancelPurchaseReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\DeletePurchaseReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Purchase\CreatePurchaseReturnInvoiceItemProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+    # purchase end
+
+    # school billing start
+    App\State\Processor\Billing\Sale\School\GenerateSchoolSaleInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\PutSchoolSaleInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\CreateSaleInvoiceFeeProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\CancelSchoolSaleInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\DeleteSchoolSaleInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\Return\GenerateSchoolSaleReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\Return\PutSchoolSaleReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\Return\CreateSaleReturnInvoiceFeeProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\Return\CancelSchoolSaleReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\Processor\Billing\Sale\School\Return\DeleteSchoolSaleReturnInvoiceProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
+    # school billing end
+
+
+
+    App\Events\LoginSuccessListener:
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onLoginSuccess }
+
+    Symfony\Component\HttpFoundation\Request:
+        # redundant thanks to _defaults, but value is overridable on each service
+        autowire: true
+
